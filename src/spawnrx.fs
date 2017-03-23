@@ -12,6 +12,7 @@ module Observable =
       else startInfo.EnvironmentVariables.Add(key, value)
 
   let forProcess fileName environmentSettings =
+    let ofObj value = match value with null -> None | _ -> Some value
     {new IObservable<_> with
       member x.Subscribe(o) =
         let psi = ProcessStartInfo(fileName)
@@ -27,8 +28,8 @@ module Observable =
                     match p.ExitCode with
                     |e when e <> 0 -> o.OnError(Exception(string e))
                     |_ -> o.OnCompleted())
-        p.OutputDataReceived.Add (fun t -> o.OnNext(Option.ofObj t.Data,None))
-        p.ErrorDataReceived.Add (fun t -> o.OnNext(None,Option.ofObj t.Data))
+        p.OutputDataReceived.Add (fun t -> o.OnNext(ofObj t.Data,None))
+        p.ErrorDataReceived.Add (fun t -> o.OnNext(None,ofObj t.Data))
         p.BeginOutputReadLine()
         p.BeginErrorReadLine()
         p.StandardInput.Close()
