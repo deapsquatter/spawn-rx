@@ -30,10 +30,8 @@ module Observable =
         p.EnableRaisingEvents <- true
         p.Exited.Add
           (fun _ -> p.WaitForExit()
-                    match p.ExitCode with
-                    |e when e <> 0 -> o.OnError(Exception(string e))
-                    |_ -> o.OnNext({StdOut=None;StdErr=None;ExitCode=Some p.ExitCode})
-                          o.OnCompleted())
+                    o.OnNext({StdOut=None;StdErr=None;ExitCode=Some p.ExitCode})
+                    o.OnCompleted())
         p.OutputDataReceived.Add (fun t -> o.OnNext({StdOut=ofObj t.Data;StdErr=None;ExitCode=None}))
         p.ErrorDataReceived.Add (fun t -> o.OnNext({StdOut=None;StdErr=ofObj t.Data;ExitCode=None}))
         p.BeginOutputReadLine()
