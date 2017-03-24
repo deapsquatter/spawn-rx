@@ -39,5 +39,6 @@ module Observable =
         p.StandardInput.Close()
         {new IDisposable with
           member x.Dispose () =
-            p.Kill()
+            if not p.HasExited then
+              try p.Kill() with |_ -> ()
             p.Dispose() }}
