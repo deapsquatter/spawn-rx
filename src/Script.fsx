@@ -1,8 +1,8 @@
 #load "spawnrx.fs"
 
-open spawnrx
+open Spawn
 
-let ob = Observable.forProcess "test.sh" Seq.empty
+let ob = Observable.ForProcess "test.sh"
 
 ob.Subscribe (
   {new System.IObserver<_> with

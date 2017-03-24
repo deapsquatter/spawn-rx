@@ -1,14 +1,13 @@
-namespace spawnrx
 
-open System
-open System.Diagnostics
+module Spawn
 
-type SpawnProgress =
-  {StdOut: string option
-   StdErr: string option
-   ExitCode: int option}
+  open System
+  open System.Diagnostics
 
-module Observable =
+  type SpawnProgress =
+    {StdOut: string option
+     StdErr: string option
+     ExitCode: int option}
 
   let private setEnvironmentVariables (startInfo : ProcessStartInfo) environmentSettings =
     for key, value in environmentSettings do
@@ -16,12 +15,14 @@ module Observable =
       then startInfo.EnvironmentVariables.[key] <- value
       else startInfo.EnvironmentVariables.Add(key, value)
 
-  let forProcess fileName environmentSettings =
+  let private forProcess fileName arguments environmentSettings =
     let ofObj value = match value with null -> None | _ -> Some value
     {new IObservable<_> with
       member x.Subscribe(o) =
-        let psi = ProcessStartInfo(fileName)
-        do setEnvironmentVariables psi environmentSettings
+        let psi = match arguments with
+                  |Some args -> ProcessStartInfo(fileName, args)
+                  |None -> ProcessStartInfo(fileName)
+        do setEnvironmentVariables psi (defaultArg environmentSettings Seq.empty)
         psi.UseShellExecute <- false
         psi.RedirectStandardOutput <- true
         psi.RedirectStandardError <- true
@@ -42,3 +43,7 @@ module Observable =
             if not p.HasExited then
               try p.Kill() with |_ -> ()
             p.Dispose() }}
+
+  type Observable =
+    static member ForProcess(fileName, ?arguments, ?environmentSettings) =
+      forProcess fileName arguments environmentSettings

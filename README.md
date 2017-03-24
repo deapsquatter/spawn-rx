@@ -3,9 +3,9 @@ Inspired by Paul Betts [spawn-rx](https://github.com/paulcbetts/spawn-rx) and [F
 ## Example Usage
 Concatenate the StdOut into a StringBuilder and get the process exit code.
 ```csharp
-open spawnrx
+open Spawn
 
-Observable.forProcess fileName Seq.Empty
+Observable.ForProcess fileName
 |> fold (fun ((sb:StringBuilder),ex) sp ->
             match sp.StdOut,ex with
             |Some out,None -> sb.Append(out),sp.ExitCode
