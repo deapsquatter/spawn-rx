@@ -15,6 +15,13 @@ module Spawn
       then startInfo.EnvironmentVariables.[key] <- value
       else startInfo.EnvironmentVariables.Add(key, value)
 
+  let private waitForExit (p:Process) =
+    try
+      p.WaitForExit()
+      Some p.ExitCode
+    with
+    |_ -> None
+
   let private forProcess fileName arguments environmentSettings =
     let ofObj value = match value with null -> None | _ -> Some value
     {new IObservable<_> with
@@ -30,8 +37,7 @@ module Spawn
         let p = Process.Start(psi)
         p.EnableRaisingEvents <- true
         p.Exited.Add
-          (fun _ -> p.WaitForExit()
-                    o.OnNext({StdOut=None;StdErr=None;ExitCode=Some p.ExitCode})
+          (fun _ -> o.OnNext({StdOut=None;StdErr=None;ExitCode=waitForExit p})
                     o.OnCompleted())
         p.OutputDataReceived.Add (fun t -> o.OnNext({StdOut=ofObj t.Data;StdErr=None;ExitCode=None}))
         p.ErrorDataReceived.Add (fun t -> o.OnNext({StdOut=None;StdErr=ofObj t.Data;ExitCode=None}))
