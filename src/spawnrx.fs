@@ -43,7 +43,6 @@ module Spawn
         p.ErrorDataReceived.Add (fun t -> o.OnNext({StdOut=None;StdErr=ofObj t.Data;ExitCode=None}))
         p.BeginOutputReadLine()
         p.BeginErrorReadLine()
-        p.StandardInput.Close()
         {new IDisposable with
           member x.Dispose () =
             if not p.HasExited then
