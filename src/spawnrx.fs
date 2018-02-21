@@ -33,7 +33,7 @@ module Spawn
         psi.UseShellExecute <- false
         psi.RedirectStandardOutput <- true
         psi.RedirectStandardError <- true
-        psi.RedirectStandardInput <- true
+        psi.RedirectStandardInput <- false
         let p = Process.Start(psi)
         p.EnableRaisingEvents <- true
         p.Exited.Add
