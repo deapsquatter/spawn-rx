@@ -22,7 +22,14 @@ module Spawn
     with
     |_ -> None
 
-  let private forProcess fileName arguments environmentSettings =
+  let writeInput (p:Process)(lines:string list) =
+    try
+      lines |> List.iter (p.StandardInput.WriteLine)
+      p.StandardInput.Flush ()
+    with
+      |_ -> ()
+
+  let private forProcess fileName arguments environmentSettings input =
     let ofObj value = match value with null -> None | _ -> Some value
     {new IObservable<_> with
       member x.Subscribe(o) =
@@ -33,7 +40,7 @@ module Spawn
         psi.UseShellExecute <- false
         psi.RedirectStandardOutput <- true
         psi.RedirectStandardError <- true
-        psi.RedirectStandardInput <- false
+        psi.RedirectStandardInput <- Option.isSome input
         let p = Process.Start(psi)
         p.EnableRaisingEvents <- true
         p.Exited.Add
@@ -43,6 +50,7 @@ module Spawn
         p.ErrorDataReceived.Add (fun t -> o.OnNext({StdOut=None;StdErr=ofObj t.Data;ExitCode=None}))
         p.BeginOutputReadLine()
         p.BeginErrorReadLine()
+        do input |> Option.iter (writeInput p)
         {new IDisposable with
           member x.Dispose () =
             if not p.HasExited then
@@ -50,5 +58,5 @@ module Spawn
             p.Dispose() }}
 
   type Observable =
-    static member ForProcess(fileName, ?arguments, ?environmentSettings) =
-      forProcess fileName arguments environmentSettings
+    static member ForProcess(fileName, ?arguments, ?environmentSettings, ?input) =
+      forProcess fileName arguments environmentSettings input
