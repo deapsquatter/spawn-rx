@@ -30,7 +30,7 @@ module Spawn
     with
       |_ -> ()
 
-  let private forProcess fileName arguments environmentSettings input =
+  let private forProcess fileName arguments environmentSettings input workingDir =
     let ofObj value = match value with null -> None | _ -> Some value
     let getPid (p:System.Diagnostics.Process) = try p.Id with |_ -> 0
     {new IObservable<_> with
@@ -39,6 +39,7 @@ module Spawn
                   |Some args -> ProcessStartInfo(fileName, args)
                   |None -> ProcessStartInfo(fileName)
         do setEnvironmentVariables psi (defaultArg environmentSettings Seq.empty)
+        psi.WorkingDirectory <- defaultArg workingDir ""
         psi.UseShellExecute <- false
         psi.RedirectStandardOutput <- true
         psi.RedirectStandardError <- true
@@ -60,5 +61,5 @@ module Spawn
             p.Dispose() }}
 
   type Observable =
-    static member ForProcess(fileName, ?arguments, ?environmentSettings, ?input) =
-      forProcess fileName arguments environmentSettings input
+    static member ForProcess(fileName, ?arguments, ?environmentSettings, ?input, ?workingDir) =
+      forProcess fileName arguments environmentSettings input workingDir
